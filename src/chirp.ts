@@ -53,9 +53,31 @@ export async function createChirp(req:Request,res:Response) {
 
 //read all
 export async function getAllChirpsByCreatedAt(req:Request,res:Response) {
-    let allChirps = await db.select().from(chirps);
-    allChirps.sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime());
-    res.status(200).send(allChirps);
+    try {
+        let authorId = "";
+        //req.query handles GET ...?authorId=1
+        let authorIdQuery = req.query.authorId;
+
+        let finalChirps : any[]  = [];
+        if (typeof authorIdQuery === "string") {
+            authorId = authorIdQuery;
+            finalChirps = await db.select().from(chirps).where(eq(chirps.userId,authorId));
+        } else if (typeof authorIdQuery === 'undefined') {
+            finalChirps = await db.select().from(chirps);
+        }
+
+        let sort = req.query.sort;
+        if (sort === "asc" || typeof sort === undefined) {
+            finalChirps.sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime());
+        } else if (sort === "desc") {
+            finalChirps.sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
+        }
+
+        
+        res.status(200).send(finalChirps);
+    } catch {
+        throw new BadRequestError("DB query issue.");
+    }
 }
 
 //read by id

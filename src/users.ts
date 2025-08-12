@@ -4,7 +4,7 @@ import { NewUser, refreshTokens, NewRToken } from "./db/schema.js";
 import { db } from "./db/index.js";
 import { eq } from "drizzle-orm"
 import { users } from "./db/schema.js";
-import { hashPassword, makeRefreshToken, validateJWT } from "./auth.js";
+import { getAPIKey, hashPassword, makeRefreshToken, validateJWT } from "./auth.js";
 import { UnauthorizedError } from "./index.js";
 import { checkPasswordHash } from "./auth.js";
 import { makeJWT } from "./jwt.js";
@@ -34,6 +34,7 @@ export async function createNewUser (req: Request, res: Response) {
             "createdAt":user.createdAt,
             "updatedAt":user.updatedAt,
             "email":user.email,
+            "isChirpyRed":user.isChirpyRed,
         });
     } else {
         throw new BadRequestError("Invalid request.");
@@ -70,6 +71,7 @@ export async function loginUser(req:Request,res:Response) {
                 "email":user.email,
                 "token":makeJWT(user.id,accessTokenExpiryInSeconds,config.secret),
                 "refreshToken": refreshToken,
+                "isChirpyRed":user.isChirpyRed,
             });
         } else {
             throw new UnauthorizedError("Incorrect email or password");
@@ -102,6 +104,7 @@ export async function updateEmailAndPassword(req:Request,res:Response) {
                     "createdAt":updatedUser[0].createdAt,
                     "updatedAt":updatedUser[0].updatedAt,
                     "email":updatedUser[0].email,
+                    "isChirpyRed":updatedUser[0].isChirpyRed,
                 });
             } catch {
                 throw new BadRequestError("Something went wrong with the db call.");
@@ -114,3 +117,34 @@ export async function updateEmailAndPassword(req:Request,res:Response) {
         throw new UnauthorizedError("Authorization header error.");
     }
 };
+
+export async function upgradeUser(req:Request,res:Response) {
+    type ReqBody = {
+        event: string,
+        data: {
+            userId: string;
+        }
+    };
+
+    if (getAPIKey(req) === config.polkaKey) {
+        try {
+            const reqBody : ReqBody = req.body;
+            if (reqBody.event !== "user.upgraded") {
+                res.status(204).send();
+                return;
+            } else {
+                const userCheck = await db.select().from(users).where(eq(users.id,reqBody.data.userId));
+                if (userCheck.length > 0) {
+                    const result = await db.update(users).set({isChirpyRed:true}).where(eq(users.id,reqBody.data.userId));
+                    res.status(204).send();
+                } else {
+                    res.status(404).send();
+                }    
+            } 
+        } catch {
+            throw new BadRequestError("Something went wrong with the db call.");
+        }
+    } else {
+        throw new UnauthorizedError("Incorrect API Key.");
+    }
+}

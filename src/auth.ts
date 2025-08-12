@@ -85,3 +85,12 @@ export async function revokeToken(req:Request) {
         throw new BadRequestError("Authorization header error.");
     }
 }
+
+export function getAPIKey(req:Request) {
+    const authHeader = req.get('Authorization');
+    if (typeof authHeader === 'string' && authHeader.startsWith("ApiKey ")) {
+        return authHeader.slice(7).trim();
+    } else {
+        throw new UnauthorizedError("Authorization header error.");
+    }
+}

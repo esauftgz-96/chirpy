@@ -2,7 +2,7 @@ import express, { NextFunction,Request,Response } from "express";
 import path from "path";
 import {config} from "./config.js";
 import { error } from "console";
-import { createNewUser,loginUser,updateEmailAndPassword } from "./users.js";
+import { createNewUser,loginUser,updateEmailAndPassword, upgradeUser } from "./users.js";
 import { deleteAll } from "./deleteAll.js";
 import { createChirp, deleteChirp, getAllChirpsByCreatedAt, getChirpById } from "./chirp.js";
 import { makeNewAccessToken, revokeToken, verifyRefreshToken } from "./auth.js";
@@ -34,6 +34,7 @@ app.post("/api/chirps",(req,res,next)=>{Promise.resolve(createChirp(req,res)).ca
 app.post("/api/login",(req,res,next)=>{Promise.resolve(loginUser(req,res)).catch(next)});
 app.post("/api/refresh",(req,res,next)=>{Promise.resolve(verifyRefreshToken(req)).then(result=>makeNewAccessToken(result,res)).catch(next)});
 app.post("/api/revoke",(req,res,next)=>{Promise.resolve(revokeToken(req)).then(result=>res.sendStatus(204)).catch(next)});
+app.post("/api/polka/webhooks",(req,res,next)=>{Promise.resolve(upgradeUser(req,res)).catch(next)});
 
 app.put("/api/users",(req,res,next)=>{Promise.resolve(updateEmailAndPassword(req,res)).catch(next)});
 

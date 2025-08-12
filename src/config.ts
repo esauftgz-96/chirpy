@@ -23,6 +23,7 @@ export type APIConfig = {
   db: DBConfig;
   platform: string;
   secret: string;
+  polkaKey: string;
 };
 
 export const config : APIConfig = {
@@ -34,6 +35,7 @@ export const config : APIConfig = {
     },
     platform: envOrThrow("PLATFORM"),
     secret: envOrThrow("SECRET"),
+    polkaKey: envOrThrow("POLKA_KEY"),
 };
 
 const migrationClient = postgres(config.db.url, { max: 1 });

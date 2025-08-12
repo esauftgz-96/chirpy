@@ -15,6 +15,13 @@
       "when": 1754648778041,
       "tag": "0001_living_carnage",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754983689910,
+      "tag": "0002_reflective_mentor",
+      "breakpoints": true
     }
   ]
 }
